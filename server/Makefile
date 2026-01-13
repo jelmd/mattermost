@@ -21,20 +21,25 @@ endef
 
 IS_CI ?= false
 # Build Flags
-BUILD_NUMBER ?= $(BUILD_NUMBER:)
 BUILD_DATE = $(shell date -u)
 BUILD_HASH = $(shell git rev-parse HEAD)
-BUILD_TAGS =
+# Always include available enterprise code in ./server/enterprise/
+# (i.e. metrics, elasticsearch, external_imports, message_export).
+BUILD_TAGS = sourceavailable
+# For development this should be set to 'dev'
+BUILD_NUMBER ?= $(BUILD_NUMBER:)
+ifeq ($(BUILD_NUMBER),)
+	# Otherwise assume production build
+	BUILD_NUMBER := $(shell date +%s)
+endif
+
+ifeq ($(BUILD_NUMBER),dev)
+	BUILD_DATE := n/a
+endif
 
 
 # Docker
 export COMPOSE_PROJECT_NAME=mattermost-server
-
-# If we don't set the build number it defaults to dev
-ifeq ($(BUILD_NUMBER),)
-	BUILD_DATE := n/a
-	BUILD_NUMBER := dev
-endif
 
 # Go test sum configuration
 GOTESTSUM_FORMAT ?= testname
@@ -83,11 +88,6 @@ ifneq ($(wildcard channels/imports/imports.go),)
 	IGNORE := $(shell rm -f channels/imports/imports.go)
 endif
 
-# Source available, already included with enterprise but also available during development.
-ifeq ($(BUILD_NUMBER),dev)
-	BUILD_TAGS += sourceavailable
-endif
-
 # Webapp
 BUILD_WEBAPP_DIR ?= ../webapp
 
@@ -96,9 +96,7 @@ BUILD_WEBAPP_DIR ?= ../webapp
 # and docker will add '/', so we need to set the go-build cache location or we'll get
 # permission errors on build as it tries to create a cache in filesystem root.
 export CURRENT_UID = $(shell id -u):$(shell id -g)
-ifeq ($(HOME),/)
-	export XDG_CACHE_HOME = /tmp/go-cache/
-endif
+export XDG_CACHE_HOME = /var/tmp/go-cache/
 
 # Go Flags
 GOFLAGS ?= $(GOFLAGS:)
@@ -143,22 +141,29 @@ TEMPLATES_DIR=templates
 # Plugins Packages
 PLUGIN_PACKAGES ?= $(PLUGIN_PACKAGES:)
 PLUGIN_PACKAGES += mattermost-plugin-calls-v1.11.0
-PLUGIN_PACKAGES += mattermost-plugin-github-v2.5.0
-PLUGIN_PACKAGES += mattermost-plugin-gitlab-v1.10.0
-PLUGIN_PACKAGES += mattermost-plugin-jira-v4.5.0
-# We need to prepackage both versions of playbooks and install the correct one based on the server license. See MM-60025.
-PLUGIN_PACKAGES += mattermost-plugin-playbooks-v1.41.1
-PLUGIN_PACKAGES += mattermost-plugin-playbooks-v2.3.0
-PLUGIN_PACKAGES += mattermost-plugin-servicenow-v2.3.4
+#PLUGIN_PACKAGES += mattermost-plugin-github-v2.5.0
+#PLUGIN_PACKAGES += mattermost-plugin-gitlab-v1.11.0
+#PLUGIN_PACKAGES += mattermost-plugin-jira-v4.4.1
+#PLUGIN_PACKAGES += mattermost-plugin-playbooks-v2.6.1
+#PLUGIN_PACKAGES += mattermost-plugin-servicenow-v2.4.0
 PLUGIN_PACKAGES += mattermost-plugin-zoom-v1.11.0
-PLUGIN_PACKAGES += mattermost-plugin-agents-v1.4.0
-PLUGIN_PACKAGES += mattermost-plugin-boards-v9.1.7
-PLUGIN_PACKAGES += mattermost-plugin-msteams-v2.2.2
-PLUGIN_PACKAGES += mattermost-plugin-user-survey-v1.1.1
-PLUGIN_PACKAGES += mattermost-plugin-mscalendar-v1.3.4
-PLUGIN_PACKAGES += mattermost-plugin-msteams-meetings-v2.3.0
-PLUGIN_PACKAGES += mattermost-plugin-metrics-v0.7.0
+#PLUGIN_PACKAGES += mattermost-plugin-agents-v1.6.3
+PLUGIN_PACKAGES += mattermost-plugin-boards-v9.2.2
+#PLUGIN_PACKAGES += mattermost-plugin-user-survey-v1.1.1
+#PLUGIN_PACKAGES += mattermost-plugin-mscalendar-v1.4.0
+#PLUGIN_PACKAGES += mattermost-plugin-msteams-meetings-v2.3.0
+#PLUGIN_PACKAGES += mattermost-plugin-metrics-v0.7.0
 PLUGIN_PACKAGES += mattermost-plugin-channel-export-v1.2.1
+
+# Overwrite the definition of PLUGIN_PACKAGES with the list of FIPS-ready plugins
+# Note that the '+' in the file name is encoded as %2B for the URL we use to
+# download the package from to work. This will no longer be needed when we unify
+# the way we pre-package FIPS and non-FIPS plugins.
+ifeq ($(FIPS_ENABLED),true)
+	PLUGIN_PACKAGES  = mattermost-plugin-playbooks-v2.6.1%2B0e01d28-fips
+	PLUGIN_PACKAGES += mattermost-plugin-agents-v1.7.2%2B866e2dd-fips
+	PLUGIN_PACKAGES += mattermost-plugin-boards-v9.2.1%2Bdf49b26-fips
+endif
 
 EE_PACKAGES=$(shell $(GO) list $(BUILD_ENTERPRISE_DIR)/...)
 
@@ -735,7 +740,21 @@ nuke: clean clean-docker ## Clean plus removes persistent server data.
 	@echo BOOM
 
 	rm -rf data
-	rm -f go.work go.work.sum
+	rm -f go.work go.work.sum $(GOTESTSUM_JSONFILE)
+	rm -rf bin/* tmpprepackaged
+	rm -f client config/config.json $(GOTESTSUM_JUNITFILE)
+
+distclean: nuke
+
+web:
+	cd $(BUILD_WEBAPP_DIR) && $(MAKE) dist
+
+$(BUILD_WEBAPP_DIR)/channels/dist/files:
+	$(MAKE) web
+
+mm: setup-go-work build-linux-amd64
+
+fin: mm $(BUILD_WEBAPP_DIR)/channels/dist/files client package-linux-amd64
 
 setup-mac: ## Adds macOS hosts entries for Docker.
 	echo $$(boot2docker ip 2> /dev/null) dockerhost | sudo tee -a /etc/hosts
