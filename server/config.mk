@@ -14,10 +14,10 @@
 ENABLED_DOCKER_SERVICES ?= postgres inbucket redis prometheus grafana loki promtail
 
 # Disable entirely the use of docker
-MM_NO_DOCKER ?= false
+MM_NO_DOCKER ?= true
 
 # Run the server in the background
-RUN_SERVER_IN_BACKGROUND ?= true
+RUN_SERVER_IN_BACKGROUND ?= false
 
 # Data loaded by default in openldap when container starts.
 #
