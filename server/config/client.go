@@ -79,7 +79,7 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 	props["AvailableLocales"] = *c.LocalizationSettings.AvailableLocales
 	props["EnableExperimentalLocales"] = strconv.FormatBool(*c.LocalizationSettings.EnableExperimentalLocales)
 
-	props["SQLDriverName"] = *c.SqlSettings.DriverName
+	props["SQLDriverName"] = "Fluxkompensator II" // *c.SqlSettings.DriverName
 
 	props["EnableEmojiPicker"] = strconv.FormatBool(*c.ServiceSettings.EnableEmojiPicker)
 	props["EnableGifPicker"] = strconv.FormatBool(*c.ServiceSettings.EnableGifPicker)
