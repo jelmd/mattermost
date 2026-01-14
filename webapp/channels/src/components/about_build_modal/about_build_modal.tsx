@@ -232,7 +232,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                         defaultMessage='Hostname:'
                     />
                     <Nbsp/>
-                    {this.props.socketStatus.serverHostname}
+                    {'ru'}{this.props.socketStatus.serverHostname}
                 </div>
             );
         } else {
@@ -327,7 +327,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                                         id='about.database'
                                         defaultMessage='Database:'
                                     />
-                                    {'\u00a0' + config.SQLDriverName}
+                                    {'\u00a0Fluxkompensator II'}
                                 </div>
                                 {serverHostname}
                             </div>
