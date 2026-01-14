@@ -81,7 +81,7 @@ describe('components/AboutBuildModal', () => {
         expect(screen.getByText('Modern communication from behind your firewall.')).toBeInTheDocument();
         expect(screen.getByRole('link', {name: 'mattermost.com'})).toHaveAttribute('href', 'https://mattermost.com/?utm_source=mattermost&utm_medium=in-product&utm_content=about_build_modal&uid=&sid=&edition=enterprise&server_version=3.6.0');
         expect(screen.getByText('EE Build Hash: 0123456789abcdef', {exact: false})).toBeInTheDocument();
-        expect(screen.queryByText('Hostname: mock.localhost', {exact: false})).toBeInTheDocument();
+        expect(screen.queryByText('Hostname: rumock.localhost', {exact: false})).toBeInTheDocument();
 
         expect(screen.getByRole('link', {name: 'server'})).toHaveAttribute('href', 'https://github.com/mattermost/mattermost-server/blob/master/NOTICE.txt');
         expect(screen.getByRole('link', {name: 'desktop'})).toHaveAttribute('href', 'https://github.com/mattermost/desktop/blob/master/NOTICE.txt');

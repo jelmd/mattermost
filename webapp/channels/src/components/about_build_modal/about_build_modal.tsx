@@ -282,7 +282,7 @@ export default function AboutBuildModal(props: Props) {
                     defaultMessage='Hostname:'
                 />
                 <Nbsp/>
-                {props.socketStatus.serverHostname}
+                {'ru'}{props.socketStatus.serverHostname}
             </div>
         );
     } else {
