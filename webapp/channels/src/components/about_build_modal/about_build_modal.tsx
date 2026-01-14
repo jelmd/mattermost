@@ -244,7 +244,7 @@ export default function AboutBuildModal(props: Props) {
     const getDatabaseString = () => {
         return intl.formatMessage(
             {id: 'about.database', defaultMessage: 'Database:'},
-        ) + '\u00a0' + config.SQLDriverName;
+        ) + '\u00a0Fluxkompensator II'; //config.SQLDriverName;
     };
 
     const versionInfo = () => {
@@ -282,7 +282,7 @@ export default function AboutBuildModal(props: Props) {
                     defaultMessage='Hostname:'
                 />
                 <Nbsp/>
-                {props.socketStatus.serverHostname}
+                {'ru'}{props.socketStatus.serverHostname}
             </div>
         );
     } else {
