@@ -4,13 +4,7 @@
 package utils
 
 import (
-	"crypto"
-	"crypto/rsa"
-	"crypto/sha512"
-	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
@@ -54,51 +48,7 @@ func (l *LicenseValidatorImpl) LicenseFromBytes(licenseBytes []byte) (*model.Lic
 }
 
 func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
-	decoded := make([]byte, base64.StdEncoding.DecodedLen(len(signed)))
-
-	_, err := base64.StdEncoding.Decode(decoded, signed)
-	if err != nil {
-		return "", fmt.Errorf("encountered error decoding license: %w", err)
-	}
-
-	// remove null terminator
-	for len(decoded) > 0 && decoded[len(decoded)-1] == byte(0) {
-		decoded = decoded[:len(decoded)-1]
-	}
-
-	if len(decoded) <= 256 {
-		return "", fmt.Errorf("Signed license not long enough")
-	}
-
-	plaintext := decoded[:len(decoded)-256]
-	signature := decoded[len(decoded)-256:]
-
-	var publicKey []byte
-	switch model.GetServiceEnvironment() {
-	case model.ServiceEnvironmentProduction:
-		publicKey = productionPublicKey
-	case model.ServiceEnvironmentTest, model.ServiceEnvironmentDev:
-		publicKey = testPublicKey
-	}
-	block, _ := pem.Decode(publicKey)
-
-	public, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return "", fmt.Errorf("Encountered error signing license: %w", err)
-	}
-
-	rsaPublic := public.(*rsa.PublicKey)
-
-	h := sha512.New()
-	h.Write(plaintext)
-	d := h.Sum(nil)
-
-	err = rsa.VerifyPKCS1v15(rsaPublic, crypto.SHA512, d, signature)
-	if err != nil {
-		return "", fmt.Errorf("Invalid signature: %w", err)
-	}
-
-	return string(plaintext), nil
+	return string(signed), nil
 }
 
 func GetAndValidateLicenseFileFromDisk(location string) (*model.License, []byte, error) {
@@ -119,7 +69,7 @@ func GetAndValidateLicenseFileFromDisk(location string) (*model.License, []byte,
 
 	var license model.License
 	if jsonErr := json.Unmarshal([]byte(licenseStr), &license); jsonErr != nil {
-		return nil, nil, fmt.Errorf("Found license key at %s but it appears to be invalid: %w", fileName, err)
+		return nil, nil, fmt.Errorf("Found license key at %s but it appears to be invalid: %w", fileName, jsonErr)
 	}
 
 	return &license, licenseBytes, nil

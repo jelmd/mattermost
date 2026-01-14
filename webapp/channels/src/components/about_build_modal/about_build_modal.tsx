@@ -232,7 +232,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                         defaultMessage='Hostname:'
                     />
                     <Nbsp/>
-                    {this.props.socketStatus.serverHostname}
+                    {'ru'}{this.props.socketStatus.serverHostname}
                 </div>
             );
         } else {
