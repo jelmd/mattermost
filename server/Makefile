@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 .PHONY: build package run stop run-client run-server run-node run-haserver stop-haserver stop-client stop-server restart restart-server restart-client restart-haserver start-docker update-docker clean-dist clean nuke check-style check-client-style check-server-style check-unit-tests test dist run-client-tests setup-run-client-tests cleanup-run-client-tests test-client build-linux build-osx build-windows package-prep package-linux package-osx package-windows internal-test-web-client vet run-server-for-web-client-tests diff-config prepackaged-plugins prepackaged-binaries test-server test-server-ee test-server-quick test-server-race test-mmctl-unit test-mmctl-e2e test-mmctl test-mmctl-coverage mmctl-build mmctl-docs new-migration migrations-extract test-public mocks-public
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -164,6 +166,14 @@ PLUGIN_PACKAGES += mattermost-plugin-boards-v9.2.2
 #PLUGIN_PACKAGES += mattermost-plugin-msteams-meetings-v2.3.0
 #PLUGIN_PACKAGES += mattermost-plugin-metrics-v0.7.0
 PLUGIN_PACKAGES += mattermost-plugin-channel-export-v1.2.1
+
+# Additional Packages we bundle in the package. Basename must follow the format:
+# ${plugin-name}-${plugin-version}.tar.gz
+PLUGIN_PACKAGES_ADD ?= $(PLUGIN_PACKAGES_ADD:)
+MM_POLL_VERSION := 1.8.0
+PLUGIN_PACKAGES_ADD += https://github.com/matterpoll/matterpoll/releases/download/v$(MM_POLL_VERSION)/com.github.matterpoll.matterpoll-${MM_POLL_VERSION}.tar.gz
+MM_REM_VERSION := 1.0.0
+PLUGIN_PACKAGES_ADD += https://github.com/scottleedavis/mattermost-plugin-remind/releases/download/v${MM_REM_VERSION}/com.github.scottleedavis.mattermost-plugin-remind-${MM_REM_VERSION}.tar.gz
 
 # Overwrite the definition of PLUGIN_PACKAGES with the list of FIPS-ready plugins
 # Note that the '+' in the file name is encoded as %2B for the URL we use to
