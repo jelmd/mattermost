@@ -2029,7 +2029,11 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 
 		if enableUsername && !enableEmail {
-			c.Err = model.NewAppError("login", "api.user.login.invalid_credentials_username", nil, "", http.StatusUnauthorized)
+			msgId := "api.user.login.invalid_credentials_username"
+			if c.Err.Id == "@" {
+				msgId = "api.user.login.invalid_credentials_username_no_email"
+			}
+			c.Err = model.NewAppError("login", msgId, nil, "", http.StatusUnauthorized)
 			return
 		}
 
@@ -2085,6 +2089,9 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 		user, err = c.App.AuthenticateUserForLogin(c.AppContext, id, loginId, password, mfaToken, "", ldapOnly)
 		if err != nil {
 			c.LogAuditWithUserId(id, "failure - login_id="+loginId)
+			if strings.Contains(loginId, "@") {
+				err.Id = "@"
+			}
 			c.Err = err
 			return
 		}
