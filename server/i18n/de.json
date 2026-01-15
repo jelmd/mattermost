@@ -5379,6 +5379,10 @@
     "translation": "Gültigen Benutzernamen und/oder Passwort eingeben."
   },
   {
+    "id": "api.user.login.invalid_credentials_username_no_email",
+    "translation": "Gültigen Benutzernamen (nicht deine Email-Adresse) und/oder Passwort eingeben."
+  },
+  {
     "id": "api.user.login.invalid_credentials_sso",
     "translation": "Gültige E-Mail und/oder Passwort eingeben oder mit anderer Anmeldemethode anmelden."
   },
