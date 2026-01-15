@@ -166,6 +166,7 @@ endif
 		cp bin/manifest.txt $(DIST_PATH); \
 	fi
 
+
 fetch-prepackaged-plugins:
 	@# Import Mattermost plugin public key, ignoring errors. In FIPS mode, GPG fails to start
 	@# the gpg-agent, but still imports the key. If it really fails, it will fail validation later.
@@ -179,6 +180,21 @@ fetch-prepackaged-plugins:
 	done
 	@echo "Done"
 
+PLUGIN_ARCH ?= linux-amd64
+
+fetch-prepackaged-plugins_add:
+	@mkdir -p tmpprepackaged/tmp
+	@echo "Downloading additional plugins to bundle ... "
+	@cd tmpprepackaged/tmp && for URL in $(PLUGIN_PACKAGES_ADD) ; do \
+		( FN=$${URL##*/} BN=$${FN%-*} ; curl -f -O -L --max-redirs 10 $$URL && \
+			tar xzf "$${FN}" && mv $$BN/server/dist/plugin-$(PLUGIN_ARCH) . && \
+			rm -f $$BN/server/dist/* && \
+			mv plugin-$(PLUGIN_ARCH) $$BN/server/dist/ && \
+			tar czf ../$${BN}-$${FN##*-} $$BN  ; printf "$$FN done.\n\n" ) ; \
+	done
+	rm -rf tmpprepackaged/tmp
+
+
 package-general:
 	@# Create needed directories
 	mkdir -p $(DIST_PATH_GENERIC)/bin
@@ -191,7 +207,7 @@ else
 	cp $(GOBIN)/$(CURRENT_PACKAGE_ARCH)/$(MM_BIN_NAME) $(GOBIN)/$(CURRENT_PACKAGE_ARCH)/$(MMCTL_BIN_NAME) $(DIST_PATH_GENERIC)/bin # from cross-compiled bin dir
 endif
 
-package-plugins: fetch-prepackaged-plugins
+package-plugins: fetch-prepackaged-plugins fetch-prepackaged-plugins_add
 	@# Create needed directories
 	mkdir -p $(DIST_PATH_GENERIC)/prepackaged_plugins
 
@@ -205,6 +221,9 @@ package-plugins: fetch-prepackaged-plugins
 			echo "Failed to verify $$plugin_package-$$ARCH.tar.gz|$$plugin_package-$$ARCH.tar.gz.sig"; \
 			exit 1; \
 		fi; \
+	done
+	@for PKG in $(PLUGIN_PACKAGES_ADD) ; do \
+		cp tmpprepackaged/$${PKG##*/} $(DIST_PATH_GENERIC)/prepackaged_plugins;\
 	done
 
 package-osx-amd64: package-prep
@@ -227,6 +246,7 @@ package-linux-amd64: package-prep
 	DIST_PATH_GENERIC=$(DIST_PATH_LIN_AMD64) PLUGIN_ARCH=linux-amd64 $(MAKE) package-plugins
 	DIST_PATH_GENERIC=$(DIST_PATH_LIN_AMD64) CURRENT_PACKAGE_ARCH=linux_amd64 MM_BIN_NAME=mattermost MMCTL_BIN_NAME=mmctl $(MAKE) package-general
 	@# Package
+	rm -f $(DIST_PATH)-$(BUILD_TYPE_NAME)-linux-amd64.tar.gz
 	tar -C $(DIST_PATH_LIN_AMD64)/.. -czf $(DIST_PATH)-$(BUILD_TYPE_NAME)-linux-amd64.tar.gz mattermost ../mattermost
 	@# Cleanup
 	rm -rf $(DIST_ROOT)/linux_amd64
