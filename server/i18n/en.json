@@ -4451,6 +4451,10 @@
     "translation": "Enter a valid username and/or password."
   },
   {
+    "id": "api.user.login.invalid_credentials_username_no_email",
+    "translation": "Enter a valid username (not your e-mail address) and/or password."
+  },
+  {
     "id": "api.user.login.not_verified.app_error",
     "translation": "Login failed because email address has not been verified."
   },
