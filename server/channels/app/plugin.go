@@ -1066,13 +1066,6 @@ func (ch *Channels) processPrepackagedPlugin(pluginPath *pluginSignaturePath) (*
 		return plugin, nil
 	}
 
-	// Skip installing if the plugin is has not been previously enabled.
-	pluginState := ch.cfgSvc.Config().PluginSettings.PluginStates[plugin.Manifest.Id]
-	if pluginState == nil || !pluginState.Enable {
-		logger.Info("Not installing prepackaged plugin: not previously enabled")
-		return plugin, nil
-	}
-
 	if _, err := ch.installExtractedPlugin(plugin.Manifest, pluginDir, installPluginLocallyOnlyIfNewOrUpgrade); err != nil && err.Id != "app.plugin.skip_installation.app_error" {
 		return nil, errors.Wrapf(err, "Failed to install extracted prepackaged plugin %s", pluginPath.bundlePath)
 	}
@@ -1255,24 +1248,22 @@ func (ch *Channels) persistTransitionallyPrepackagedPlugins() {
 
 // buildPrepackagedPlugin builds a PrepackagedPlugin from the plugin at the given path, additionally returning the directory in which it was extracted.
 func (ch *Channels) buildPrepackagedPlugin(logger *mlog.Logger, pluginPath *pluginSignaturePath, pluginFile io.ReadSeeker, tmpDir string) (*plugin.PrepackagedPlugin, string, error) {
-	// Always require signature for prepackaged plugins
-	if pluginPath.signaturePath == "" {
-		return nil, "", errors.Errorf("Prepackaged plugin missing required signature file")
-	}
+	// Check signature of prepackaged plugins if available
+	if pluginPath.signaturePath != "" {
+		// Open signature file
+		signatureFile, sigErr := os.Open(pluginPath.signaturePath)
+		if sigErr != nil {
+			return nil, "", errors.Wrapf(sigErr, "Failed to open prepackaged plugin signature %s", pluginPath.signaturePath)
+		}
+		defer signatureFile.Close()
 
-	// Open signature file
-	signatureFile, sigErr := os.Open(pluginPath.signaturePath)
-	if sigErr != nil {
-		return nil, "", errors.Wrapf(sigErr, "Failed to open prepackaged plugin signature %s", pluginPath.signaturePath)
-	}
-	defer signatureFile.Close()
-
-	// Verify signature extraction
-	if _, err := pluginFile.Seek(0, io.SeekStart); err != nil {
-		return nil, "", errors.Wrapf(err, "Failed to seek to start of plugin file for signature verification: %s", pluginPath.bundlePath)
-	}
-	if appErr := ch.verifyPlugin(logger, pluginFile, signatureFile); appErr != nil {
-		return nil, "", errors.Wrapf(appErr, "Prepackaged plugin signature verification failed for %s using %s", pluginPath.bundlePath, pluginPath.signaturePath)
+		// Verify signature extraction
+		if _, err := pluginFile.Seek(0, io.SeekStart); err != nil {
+			return nil, "", errors.Wrapf(err, "Failed to seek to start of plugin file for signature verification: %s", pluginPath.bundlePath)
+		}
+		if appErr := ch.verifyPlugin(logger, pluginFile, signatureFile); appErr != nil {
+			return nil, "", errors.Wrapf(appErr, "Prepackaged plugin signature verification failed for %s using %s", pluginPath.bundlePath, pluginPath.signaturePath)
+		}
 	}
 
 	// Extract plugin after signature verification

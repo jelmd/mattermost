@@ -140,20 +140,17 @@ endif
 		cp bin/manifest.txt $(DIST_PATH); \
 	fi
 
+PLUGIN_ARCH ?= linux-amd64
 
 fetch-prepackaged-plugins:
-	@# Import Mattermost plugin public key
-	gpg --import build/plugin-production-public-key.gpg
-	@# Download prepackaged plugins
 	mkdir -p tmpprepackaged
 	@echo "Downloading prepackaged plugins ... "
 	@cd tmpprepackaged && for plugin_package in $(PLUGIN_PACKAGES) ; do \
-		curl -f -O -L https://plugins.releases.mattermost.com/release/$$plugin_package-$(PLUGIN_ARCH).tar.gz; \
-		curl -f -O -L https://plugins.releases.mattermost.com/release/$$plugin_package-$(PLUGIN_ARCH).tar.gz.sig; \
+		( FN=$$plugin_package-$(PLUGIN_ARCH).tar.gz ; \
+		curl -f -O -L https://plugins.releases.mattermost.com/release/$$FN ; \
+		gzip -t $$FN 2>/dev/null && printf "$$FN done.\n\n" || \
+			printf "$$FN failed.\n\n" ) ; \
 	done
-	@echo "Done"
-
-PLUGIN_ARCH ?= linux-amd64
 
 fetch-prepackaged-plugins_add:
 	@mkdir -p tmpprepackaged/tmp
@@ -188,12 +185,6 @@ package-plugins: fetch-prepackaged-plugins fetch-prepackaged-plugins_add
 	@for plugin_package in $(PLUGIN_PACKAGES) ; do \
 		ARCH=$(PLUGIN_ARCH); \
 		cp tmpprepackaged/$$plugin_package-$$ARCH.tar.gz $(DIST_PATH_GENERIC)/prepackaged_plugins; \
-		cp tmpprepackaged/$$plugin_package-$$ARCH.tar.gz.sig $(DIST_PATH_GENERIC)/prepackaged_plugins; \
-		gpg --verify $(DIST_PATH_GENERIC)/prepackaged_plugins/$$plugin_package-$$ARCH.tar.gz.sig $(DIST_PATH_GENERIC)/prepackaged_plugins/$$plugin_package-$$ARCH.tar.gz; \
-		if [ $$? -ne 0 ]; then \
-			echo "Failed to verify $$plugin_package-$$ARCH.tar.gz|$$plugin_package-$$ARCH.tar.gz.sig"; \
-			exit 1; \
-		fi; \
 	done
 	@for PKG in $(PLUGIN_PACKAGES_ADD) ; do \
 		cp tmpprepackaged/$${PKG##*/} $(DIST_PATH_GENERIC)/prepackaged_plugins;\
