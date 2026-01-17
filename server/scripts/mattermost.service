@@ -1,0 +1,28 @@
+# Linux systemd driven platforms:
+# Adjust and Copy this file to /etc/systemd/system/ and run as privileged user
+# 	systemctl daemon-reload
+# Now adjust the mattermost config file and finally enable and start this
+# service via 'systemctl enable mattermost; systemctl start mattermost'.
+[Unit]
+Description=MatterMost Server
+After=network.target auditd.service
+
+[Service]
+User=webservd
+Group=webservd
+
+Environment='CFG=/opt/mattermost/config/config.json'
+# It is recommended to store your config.json somewhere else, e.g. in /etc/
+# and overwrite the default here:
+EnvironmentFile=-/etc/default/mattermost
+
+Type=notify
+ExecStart=/opt/mattermost/bin/mattermost -c $CFG
+TimeoutStartSec=120
+Restart=always
+RestartSec=10
+WorkingDirectory=/opt/mattermost
+LimitNOFILE=49152
+
+[Install]
+WantedBy=multi-user.target
