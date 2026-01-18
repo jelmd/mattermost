@@ -3,6 +3,7 @@ on:
   workflow_call:
 jobs:
   test:
+    if: github.repository_owner == 'mattermost'
     name: MySQL -> Postgres Migration
     runs-on: ubuntu-22.04
     env:
