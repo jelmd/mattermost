@@ -7,6 +7,7 @@ name: Server CI
 on:
   push:
     branches:
+      - fin
       - master
       - release-*
   pull_request:
@@ -187,7 +188,7 @@ jobs:
           make mmctl-docs
           if [[ -n $(git status --porcelain) ]]; then echo "Please update the mmctl docs using make mmctl-docs"; exit 1; fi
   test-postgres-binary:
-    if: github.event_name == 'push' # Only run postgres binary tests on master/release pushes: odds are low this regresses, so save the cycles for pull requests.
+    if: github.repository_owner == 'mattermost' && github.event_name == 'push' # Only run postgres binary tests on master/release pushes: odds are low this regresses, so save the cycles for pull requests.
     name: Postgres with binary parameters
     needs: go
     uses: ./.github/workflows/server-test-template.yml
@@ -200,6 +201,7 @@ jobs:
       go-version: ${{ needs.go.outputs.version }}
       fips-enabled: false
   test-postgres-normal:
+    if: github.repository_owner == 'mattermost' # does not work as well
     name: Postgres
     needs: go
     uses: ./.github/workflows/server-test-template.yml
@@ -213,7 +215,7 @@ jobs:
       fips-enabled: false
   test-postgres-normal-fips:
     # Skip FIPS testing for forks, which won't have docker login credentials.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.repository_owner == 'mattermost' && ( github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository )
     name: Postgres (FIPS)
     needs: go
     uses: ./.github/workflows/server-test-template.yml
@@ -256,7 +258,7 @@ jobs:
   test-mmctl-fips:
     name: Run mmctl tests (FIPS)
     # Skip FIPS testing for forks, which won't have docker login credentials.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.repository_owner == 'mattermost' && ( github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository )
     needs: go
     uses: ./.github/workflows/mmctl-test-template.yml
     secrets: inherit
