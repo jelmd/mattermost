@@ -10,6 +10,7 @@ on:
 
 jobs:
   sentry:
+    if: github.repository_owner == 'mattermost'
     name: Send build info to sentry
     runs-on: ubuntu-22.04
     env:

@@ -234,7 +234,7 @@ jobs:
           make mmctl-docs
           if [[ -n $(git status --porcelain) ]]; then echo "Please update the mmctl docs using make mmctl-docs"; exit 1; fi
   test-postgres-binary:
-    if: github.ref_name != 'master' # Do not run postgres binary tests on master
+    if: github.repository_owner == 'mattermost' && github.event_name == 'push' # Only run postgres binary tests on master/release pushes: odds are low this regresses, so save the cycles for pull requests.
     name: Postgres with binary parameters
     needs: check-mattermost-vet
     uses: ./.github/workflows/server-test-template.yml
@@ -245,6 +245,7 @@ jobs:
       drivername: postgres
       logsartifact: postgres-binary-server-test-logs
   test-postgres-normal:
+    if: github.repository_owner == 'mattermost' # does not work as well
     name: Postgres
     needs: check-mattermost-vet
     uses: ./.github/workflows/server-test-template.yml
@@ -256,6 +257,7 @@ jobs:
       logsartifact: postgres-server-test-logs
   test-mysql:
     name: MySQL
+    if: github.repository_owner == 'mattermost'
     needs: check-mattermost-vet
     uses: ./.github/workflows/server-test-template.yml
     secrets: inherit
@@ -266,7 +268,7 @@ jobs:
       logsartifact: mysql-server-test-logs
   test-coverage:
     # Skip coverage generation for cherry-pick PRs into release branches.
-    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'release-') }}
+    if: ${{ github.repository_owner == 'skip' && ( github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'release-') ) }}
     name: Generate Test Coverage
     needs: check-mattermost-vet
     uses: ./.github/workflows/server-test-template.yml
