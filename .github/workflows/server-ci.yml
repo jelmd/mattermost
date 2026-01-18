@@ -7,6 +7,7 @@ name: Server CI
 on:
   push:
     branches:
+      - fin
       - master
       - release-*
   pull_request:
@@ -123,7 +124,7 @@ jobs:
         with:
           run: make vet-api
   test-postgres-binary:
-    if: github.event_name == 'push' # Only run postgres binary tests on master/release pushes: odds are low this regresses, so save the cycles for pull requests.
+    if: github.repository_owner == 'mattermost' && github.event_name == 'push' # Only run postgres binary tests on master/release pushes: odds are low this regresses, so save the cycles for pull requests.
     name: Postgres with binary parameters
     needs: go
     uses: ./.github/workflows/server-test-template.yml
@@ -138,6 +139,7 @@ jobs:
       fullyparallel: false
   # -- Sharded into 4 parallel runners for ~88% wall-time improvement --
   test-postgres-normal:
+    if: github.repository_owner == 'mattermost' # does not work as well
     name: Postgres (shard ${{ matrix.shard }})
     needs: go
     strategy:
@@ -186,7 +188,7 @@ jobs:
   test-postgres-normal-fips:
     # Always run on pushes to master/release branches.
     # For PRs, run when the branch name contains "fips" or any go.mod was changed.
-    if: github.event_name == 'push' || contains(github.head_ref, 'fips') || needs.go.outputs.gomod-changed == 'true'
+    if: github.repository_owner == 'mattermost' && ( github.event_name == 'push' || contains(github.head_ref, 'fips') || needs.go.outputs.gomod-changed == 'true' )
     name: Postgres FIPS (shard ${{ matrix.shard }})
     needs: go
     strategy:
@@ -250,7 +252,7 @@ jobs:
   test-mmctl-fips:
     name: Run mmctl tests (FIPS)
     # Skip FIPS testing for forks, which won't have docker login credentials.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.repository_owner == 'mattermost' && ( github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository )
     needs: go
     uses: ./.github/workflows/mmctl-test-template.yml
     secrets: inherit
