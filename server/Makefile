@@ -25,6 +25,7 @@ IS_CI ?= false
 # Build Flags
 BUILD_DATE = $(shell date -u)
 BUILD_HASH = $(shell git rev-parse HEAD)
+COMMIT_DATE = $(shell git log -1 --pretty=format:%cI)
 # Always include available enterprise code in ./server/enterprise/
 # (i.e. metrics, elasticsearch, external_imports, message_export).
 BUILD_TAGS = sourceavailable
@@ -60,6 +61,9 @@ MMCTL_TESTFLAGS ?= -timeout 30m
 MMCTL_PKG = github.com/mattermost/mattermost/server/v8/cmd/mmctl/commands
 MMCTL_BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 MMCTL_LDFLAGS += -X "$(MMCTL_PKG).buildDate=$(MMCTL_BUILD_DATE)"
+MMCTL_LDFLAGS += -X "$(MMCTL_PKG).commitDate=$(COMMIT_DATE)"
+MMCTL_LDFLAGS += -X "$(MMCTL_PKG).revision=$(BUILD_HASH)"
+MMCTL_LDFLAGS += -X "$(MMCTL_PKG).gitTreeState=clean"
 
 # Enterprise
 BUILD_ENTERPRISE_DIR ?= ../../enterprise
