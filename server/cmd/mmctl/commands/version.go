@@ -17,7 +17,10 @@ import (
 var (
 	Version = model.CurrentVersion
 	// Build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
-	buildDate = "dev"
+	buildDate    = "dev"
+	revision     = "dev"
+	gitTreeState = "dev"
+	commitDate   = "dev"
 )
 
 var VersionCmd = &cobra.Command{
@@ -60,10 +63,6 @@ func getVersionInfo() (*Info, error) {
 	}
 
 	var (
-		revision     = "dev"
-		gitTreeState = "dev"
-		commitDate   = "dev"
-
 		os       string
 		arch     string
 		compiler string
@@ -71,16 +70,6 @@ func getVersionInfo() (*Info, error) {
 
 	for _, s := range info.Settings {
 		switch s.Key {
-		case "vcs.revision":
-			revision = s.Value
-		case "vcs.time":
-			commitDate = s.Value
-		case "vcs.modified":
-			if s.Value == "true" {
-				gitTreeState = "dirty"
-			} else {
-				gitTreeState = "clean"
-			}
 		case "GOOS":
 			os = s.Value
 		case "GOARCH":
