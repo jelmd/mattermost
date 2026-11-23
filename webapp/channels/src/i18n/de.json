@@ -6222,6 +6222,7 @@
   "signup_user_completed.userHelp": "Du kannst Kleinbuchstaben, Zahlen, Punkte, Striche und Unterstriche verwenden.",
   "signup_user_completed.usernameLength": "Benutzernamen müssen mit einem Kleinbuchstaben beginnen und {min}-{max} Zeichen lang sein. Du kannst Kleinbuchstaben, Zahlen, Punkte, Striche und Unterstriche verwenden.",
   "signup_user_completed.validEmail": "Bitte gib eine gültige E-Mail-Adresse ein",
+  "signup_user_completed.unsupportedProvider": "Google Mail (gmail.com) ist nicht RFC-kompatibel und deshalb nicht unterstützt. Wähle bitte einen zuverlässigen E-Mail-Provider.",
   "single_channel_guest_limit_banner.cta": "Vertrieb kontaktieren",
   "single_channel_guest_limit_banner.message": "Dein Arbeitsbereich hat das Limit für Gäste mit nur einem Kanal erreicht",
   "single_image_view.copied_link_tooltip": "Kopiert",

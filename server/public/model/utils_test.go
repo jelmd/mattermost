@@ -450,6 +450,10 @@ func TestIsValidEmail(t *testing.T) {
 			Input:    "john..doe@example.com",
 			Expected: false,
 		},
+		{
+			Input:    "test@gmail.com",
+			Expected: false,
+		},
 	} {
 		t.Run(testCase.Input, func(t *testing.T) {
 			assert.Equal(t, testCase.Expected, IsValidEmail(testCase.Input))

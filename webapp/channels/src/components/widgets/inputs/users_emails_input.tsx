@@ -80,6 +80,7 @@ const messages = defineMessages({
     },
 });
 
+
 export class UsersEmailsInput extends React.PureComponent<Props, State> {
     static defaultProps = {
         noMatchMessage: messages.noMatchDefault,
@@ -327,7 +328,7 @@ export class UsersEmailsInput extends React.PureComponent<Props, State> {
             }
 
             // Check if the input is a valid new email, if the email invitations are enabled.
-            if (this.props.emailInvitationsEnabled && isEmail(action.prevInputValue)) {
+            if (this.props.emailInvitationsEnabled && isEmail(action.prevInputValue) && !action.prevInputValue.toLowerCase().endsWith('@gmail.com')) {
                 const email = action.prevInputValue;
                 this.onChange([...values, {value: email, label: email}]);
                 this.props.onInputChange('');

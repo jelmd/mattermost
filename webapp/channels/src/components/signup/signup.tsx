@@ -498,6 +498,9 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
         } else if (!isEmail(providedEmail)) {
             setEmailError(formatMessage({id: 'signup_user_completed.validEmail', defaultMessage: 'Please enter a valid email address'}));
             isValid = false;
+        } else if (providedEmail.toLowerCase().endsWith('@gmail.com')) {
+            setEmailError(formatMessage({id: 'signup_user_completed.unsupportedProvider', defaultMessage: 'Google Mail (gmail.com) is not RFC-compliant and is therefore not supported. Please choose a reliable email provider.'}));
+            isValid = false;
         }
 
         const providedUsername = nameInput.current?.value.trim().toLowerCase();

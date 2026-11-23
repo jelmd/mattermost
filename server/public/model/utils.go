@@ -679,6 +679,11 @@ func IsValidEmail(input string) bool {
 	if strings.Count(input, "@") > 1 {
 		return false
 	}
+	// Gmail-Adressen ablehnen - Mails werden dort eh nicht abgenommen.
+	if strings.HasSuffix(strings.ToLower(input), "@gmail.com") {
+		mlog.Warn("@gmail.com e-mail address rejected.", mlog.String("email", input))
+		return false
+	}
 	return true
 }
 
